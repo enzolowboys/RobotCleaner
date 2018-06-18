@@ -1,0 +1,6 @@
+plan(1,init, sentence(true,move(print("Robot Ready")),'','' ))
+plan(1,handleSensorData, sentence(true,printCurrentEvent(false),'','' ))
+plan(2,handleSensorData, sentence(true,msgswitch(sensorMsg, sensorMsg( TEMP,TIME) , not here  GuardMove),'','' ))
+plan(3,handleSensorData, sentence(true,msgswitch(sensorMsg, sensorMsg( TEMP,TIME) , not here  GuardMove),'','' ))
+plan(1,doWork, sentence(true,msgswitch(usercommand, usercommand( start) , not here StateMoveNormal),'','' ))
+plan(2,doWork, sentence(true,msgswitch(usercommand, usercommand( halt) , not here StateMoveNormal),'','' ))

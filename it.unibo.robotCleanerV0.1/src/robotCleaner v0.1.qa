@@ -1,0 +1,72 @@
+/* [
+ * First Model of Analysis Requirement
+ * 
+ */
+
+System robotCleaner
+Event usercmd      : usercmd(CMD)  		//Can be Start or Stop
+Event sonarSensor  : sonar(NAME, DISTANCE)			////NAME= sonar1 | sonar2 | roversona
+Event dataSensor : dateSensor(TEMP,TIME)     //Invia la data o la temperatura
+			//Evento per l'ora
+
+Dispatch sensorMsg : dataSensor(TEMP,TIME)
+Dispatch usercommand : usercmd(CMD)
+
+Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] -g white
+EventHandler evh for dataSensor -print {	//event-driven ; no Mqtt support yet
+ 	forwardEvent mbotcleaner -m sensorMsg  	//from event to message
+}; 
+EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
+ 	forwardEvent mbotcleaner -m usercommand  	//from event to message
+};   
+
+QActor mbotcleaner context ctxRobotCleaner {
+	Rules{
+		//Valuto la temperatura
+		eval( ge, X, X ).
+		eval( ge, X, V ):- eval( gt, X , V ) .
+		eval(le,X,X).
+		eval(le,X,V):-eval(lt,X,V).
+ 		evalSensor( start ) :- curTemperatureValue(V), eval( lt, V , 25 ),curTime(VAL),eval(le,VAL,17),eval(ge,VAL,15).
+ 		evalSensor( halt ) :- curTemperatureValue(V),eval( ge, V , 25 ).
+ 		evalSensor(halt):- curTime(VAL),eval(lt,VAL,15).
+ 		evalSensor(halt):- curTime(VAL),eval(gt,VAL,17).
+ 			
+ }
+	Plan init normal [
+		println("Robot Ready")
+	]
+	switchTo waitStart
+	
+	Plan waitStart []
+	transition stopAfter 36000000
+		whenMsg sensorMsg -> handleSensorData,
+		whenMsg usercommand -> doWork
+	finally repeatPlan
+	
+	Plan handleSensorData[
+		printCurrentEvent;
+		onMsg sensorMsg : sensorMsg(TEMP,TIME) ->
+			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(TEMP);
+		onMsg sensorMsg : sensorMsg(TEMP,TIME) -> 
+			ReplaceRule curTime(X)  with curTime(TIME)
+			]
+	
+	Plan doWork[
+		
+		onMsg usercommand : usercommand(start) -> {
+			[!? evalSensor(start)]
+				println("START")
+			else
+			println("DON'T MOVE")
+		};
+		
+		onMsg usercommand : usercommand(halt) -> {
+			println("STOP")
+		}
+		
+	]
+	
+//TODO: TESTING, BLINKLED,FIXED OBSTACLE
+	
+}
