@@ -2,37 +2,40 @@
  * First Model of Analysis Requirement
  * 
  */
-
 System robotCleaner
-Event usercmd      : usercmd(CMD)  		//Can be Start or Stop
-Event sonarSensor  : sonar(NAME, DISTANCE)			////NAME= sonar1 | sonar2 | roversona
-Event dataSensor : dateSensor(TEMP,TIME)     //Invia la data o la temperatura
-			//Evento per l'ora
 
-Dispatch sensorMsg : dataSensor(TEMP,TIME)
-Dispatch usercommand : usercmd(CMD)
+Event usercmd      : usercmd(CMD)  		//Can be Start or Stop
+Event sonarSensor  : sonar(NAME, DISTANCE)			//NAME= sonar1 | sonar2 | roversonar
+Event dataSensor : dataSensor(TEMP, TIME)     //Invia la temperatura e l'orario della giornata
+
+Dispatch dataSensorMsg : dataSensor(TEMP,TIME)
+Dispatch usercmdMsg : usercmd(CMD)
 
 Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] -g white
 EventHandler evh for dataSensor -print {	//event-driven ; no Mqtt support yet
- 	forwardEvent mbotcleaner -m sensorMsg  	//from event to message
+ 	forwardEvent mbotcleaner -m dataSensorMsg  	//from event to message
 }; 
 EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
- 	forwardEvent mbotcleaner -m usercommand  	//from event to message
+ 	forwardEvent mbotcleaner -m usercmdMsg  	//from event to message
 };   
 
 QActor mbotcleaner context ctxRobotCleaner {
 	Rules{
-		//Valuto la temperatura
-		eval( ge, X, X ).
-		eval( ge, X, V ):- eval( gt, X , V ) .
-		eval(le,X,X).
-		eval(le,X,V):-eval(lt,X,V).
- 		evalSensor( start ) :- curTemperatureValue(V), eval( lt, V , 25 ),curTime(VAL),eval(le,VAL,17),eval(ge,VAL,15).
- 		evalSensor( halt ) :- curTemperatureValue(V),eval( ge, V , 25 ).
- 		evalSensor(halt):- curTime(VAL),eval(lt,VAL,15).
- 		evalSensor(halt):- curTime(VAL),eval(gt,VAL,17).
- 			
- }
+		eval(ge, X, X).
+		eval(ge, X, V) :- eval(gt, X, V) .
+		eval(le, X, X).
+		eval(le, X, V) :- eval(lt, X, V).
+		
+		limitTemperatureValue(25).
+		limitTimeValue(15, 17).
+		
+ 		evalSensor(start) :- curTemperatureValue(TEMP), limitTemperatureValue(MAXTEMP), eval(lt, TEMP, MAXTEMP),
+ 								curTimeValue(TIME), limitTimeValue(MINTIME, MAXTIME), eval(ge, TIME, MINTIME), eval(le, TIME, MAXTIME).
+ 		evalSensor(halt) :- curTemperatureValue(TEMP), limitTemperatureValue(MAX), eval(ge, TEMP, MAX).
+ 		evalSensor(halt) :- curTimeValue(TIME), limitTimeValue(MIN, _), eval(lt, TIME, MIN).
+ 		evalSensor(halt) :- curTimeValue(TIME), limitTimeValue(_, MAX), eval(gt, TIME, MAX).
+ 	}
+ 	
 	Plan init normal [
 		println("Robot Ready")
 	]
@@ -40,28 +43,33 @@ QActor mbotcleaner context ctxRobotCleaner {
 	
 	Plan waitStart []
 	transition stopAfter 36000000
-		whenMsg sensorMsg -> handleSensorData,
-		whenMsg usercommand -> doWork
+		whenMsg dataSensorMsg -> handleDataSensor,
+		whenMsg usercmdMsg -> doWork
 	finally repeatPlan
 	
-	Plan handleSensorData[
+	/*aggiorniamo il Resource Model con i valori correnti di Time e Temperature*/
+	Plan handleDataSensor[
 		printCurrentEvent;
-		onMsg sensorMsg : sensorMsg(TEMP,TIME) ->
+		onMsg dataSensorMsg : dataSensor(TEMP,TIME) ->
 			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(TEMP);
-		onMsg sensorMsg : sensorMsg(TEMP,TIME) -> 
-			ReplaceRule curTime(X)  with curTime(TIME)
-			]
+			
+		onMsg dataSensorMsg : dataSensor(TEMP, TIME) -> 
+			ReplaceRule curTimeValue(X)  with curTimeValue(TIME)
+	]
 	
+	/* Il robot parte se è arrivato il messaggio di 'start' e i valori del Sensore (Time e Temperature)
+	 * sono nei parametri accettabili.
+	 * Si ferma quando arriva un messaggio di 'halt'*/
 	Plan doWork[
-		
-		onMsg usercommand : usercommand(start) -> {
+		printCurrentEvent;
+		onMsg usercmdMsg : usercmdMsg(start) -> {
 			[!? evalSensor(start)]
 				println("START")
 			else
-			println("DON'T MOVE")
+				println("DON'T MOVE")
 		};
 		
-		onMsg usercommand : usercommand(halt) -> {
+		onMsg usercmdMsg : usercmdMsg(halt) -> {
 			println("STOP")
 		}
 		
