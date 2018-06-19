@@ -1,0 +1,4 @@
+plan(1,init, sentence(true,move(print("Inizializza oggetto led")),'','' ))
+plan(1,doWork, sentence(true,msgswitch(cmdToLed, cmdToLed( on) , move(print("LED ON"))),'','' ))
+plan(2,doWork, sentence(true,msgswitch(cmdToLed, cmdToLed( off) , move(print("LED OFF"))),'','' ))
+plan(3,doWork, sentence(true,move(resumeplan),'','' ))

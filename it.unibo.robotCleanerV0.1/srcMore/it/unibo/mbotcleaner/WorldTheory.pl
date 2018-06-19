@@ -146,10 +146,10 @@ eval( ge,X,X).
 eval( ge,X,V):-eval( gt,X,V).
 eval( le,X,X).
 eval( le,X,V):-eval( lt,X,V).
-evalSensor( start):-curTemperatureValue( V),eval( lt,V,25),curTime( VAL),eval( le,VAL,17),eval( ge,VAL,15).
-evalSensor( halt):-curTemperatureValue( V),eval( ge,V,25).
-evalSensor( halt):-curTime( VAL),eval( lt,VAL,15).
-evalSensor( halt):-curTime( VAL),eval( gt,VAL,17).
+evalSensor( start):-curTemperatureValue( TEMP),eval( lt,TEMP,25),curTimeValue( TIME),eval( ge,TIME,15),eval( lt,TIME,17).
+evalSensor( halt):-curTemperatureValue( TEMP),limitTemperatureValue( MAX),eval( ge,TEMP,MAX).
+evalSensor( halt):-curTimeValue( TIME),limitTimeValue( MIN,_),eval( lt,TIME,MIN).
+evalSensor( halt):-curTimeValue( TIME),limitTimeValue( _,MAX),eval( gt,TIME,MAX).
 /*
 ------------------------------------------------------------------------
 testex :- actorPrintln( testex ),

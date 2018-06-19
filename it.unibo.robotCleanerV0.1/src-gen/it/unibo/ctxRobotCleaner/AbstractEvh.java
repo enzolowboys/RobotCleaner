@@ -26,7 +26,7 @@ showMsg( event.getPrologRep()  );
 		Term msgPattern = Term.createTerm("dataSensor(TEMP,TIME)");
 				boolean b = this.pengine.unify(msgt, msgPattern);
 				if( b ) {
-			  		sendMsg("sensorMsg","mbotcleaner", QActorContext.dispatch, msgt.toString() ); 
+			  		sendMsg("dataSensorMsg","mbotcleaner", QActorContext.dispatch, msgt.toString() ); 
 				}else{
 					println("non unifiable");
 				}

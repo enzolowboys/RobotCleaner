@@ -57,7 +57,7 @@ public abstract class AbstractMbotcleaner extends QActor {
 	    	stateTab.put("handleToutBuiltIn",handleToutBuiltIn);
 	    	stateTab.put("init",init);
 	    	stateTab.put("waitStart",waitStart);
-	    	stateTab.put("handleSensorData",handleSensorData);
+	    	stateTab.put("handleDataSensor",handleDataSensor);
 	    	stateTab.put("doWork",doWork);
 	    }
 	    StateFun handleToutBuiltIn = () -> {	
@@ -94,8 +94,8 @@ public abstract class AbstractMbotcleaner extends QActor {
 	    	String myselfName = "waitStart";  
 	    	//bbb
 	     msgTransition( pr,myselfName,"mbotcleaner_"+myselfName,false,
-	          new StateFun[]{stateTab.get("handleSensorData"), stateTab.get("doWork") }, 
-	          new String[]{"true","M","sensorMsg", "true","M","usercommand" },
+	          new StateFun[]{stateTab.get("handleDataSensor"), stateTab.get("doWork") }, 
+	          new String[]{"true","M","dataSensorMsg", "true","M","usercmdMsg" },
 	          36000000, "handleToutBuiltIn" );//msgTransition
 	    }catch(Exception e_waitStart){  
 	    	 println( getName() + " plan=waitStart WARNING:" + e_waitStart.getMessage() );
@@ -103,83 +103,88 @@ public abstract class AbstractMbotcleaner extends QActor {
 	    }
 	    };//waitStart
 	    
-	    StateFun handleSensorData = () -> {	
+	    StateFun handleDataSensor = () -> {	
 	    try{	
-	     PlanRepeat pr = PlanRepeat.setUp("handleSensorData",-1);
-	    	String myselfName = "handleSensorData";  
+	     PlanRepeat pr = PlanRepeat.setUp("handleDataSensor",-1);
+	    	String myselfName = "handleDataSensor";  
 	    	printCurrentEvent(false);
 	    	//onMsg 
 	    	setCurrentMsgFromStore(); 
-	    	curT = Term.createTerm("sensorMsg(TEMP,TIME)");
-	    	if( currentMessage != null && currentMessage.msgId().equals("sensorMsg") && 
+	    	curT = Term.createTerm("dataSensor(TEMP,TIME)");
+	    	if( currentMessage != null && currentMessage.msgId().equals("dataSensorMsg") && 
 	    		pengine.unify(curT, Term.createTerm("dataSensor(TEMP,TIME)")) && 
 	    		pengine.unify(curT, Term.createTerm( currentMessage.msgContent() ) )){ 
 	    		String parg  ="curTemperatureValue(X)";
 	    		String parg1 ="curTemperatureValue(TEMP)";
 	    		/* ReplaceRule */
-	    		parg = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("sensorMsg(TEMP,TIME)"), 
+	    		parg = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("dataSensor(TEMP,TIME)"), 
 	    			    		  					Term.createTerm(currentMessage.msgContent()), parg);
-	    		parg1 = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("sensorMsg(TEMP,TIME)"), 
+	    		parg1 = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("dataSensor(TEMP,TIME)"), 
 	    			    		  					Term.createTerm(currentMessage.msgContent()), parg1);
 	    		if( parg != null && parg1 != null  ) replaceRule(parg, parg1);	    		  					
 	    	}
 	    	//onMsg 
 	    	setCurrentMsgFromStore(); 
-	    	curT = Term.createTerm("sensorMsg(TEMP,TIME)");
-	    	if( currentMessage != null && currentMessage.msgId().equals("sensorMsg") && 
+	    	curT = Term.createTerm("dataSensor(TEMP,TIME)");
+	    	if( currentMessage != null && currentMessage.msgId().equals("dataSensorMsg") && 
 	    		pengine.unify(curT, Term.createTerm("dataSensor(TEMP,TIME)")) && 
 	    		pengine.unify(curT, Term.createTerm( currentMessage.msgContent() ) )){ 
-	    		String parg  ="curTime(X)";
-	    		String parg1 ="curTime(TIME)";
+	    		String parg  ="curTimeValue(X)";
+	    		String parg1 ="curTimeValue(TIME)";
 	    		/* ReplaceRule */
-	    		parg = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("sensorMsg(TEMP,TIME)"), 
+	    		parg = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("dataSensor(TEMP,TIME)"), 
 	    			    		  					Term.createTerm(currentMessage.msgContent()), parg);
-	    		parg1 = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("sensorMsg(TEMP,TIME)"), 
+	    		parg1 = updateVars(Term.createTerm("dataSensor(TEMP,TIME)"),  Term.createTerm("dataSensor(TEMP,TIME)"), 
 	    			    		  					Term.createTerm(currentMessage.msgContent()), parg1);
 	    		if( parg != null && parg1 != null  ) replaceRule(parg, parg1);	    		  					
 	    	}
-	    	repeatPlanNoTransition(pr,myselfName,"mbotcleaner_"+myselfName,false,false);
-	    }catch(Exception e_handleSensorData){  
-	    	 println( getName() + " plan=handleSensorData WARNING:" + e_handleSensorData.getMessage() );
+	    	repeatPlanNoTransition(pr,myselfName,"mbotcleaner_"+myselfName,false,true);
+	    }catch(Exception e_handleDataSensor){  
+	    	 println( getName() + " plan=handleDataSensor WARNING:" + e_handleDataSensor.getMessage() );
 	    	 QActorContext.terminateQActorSystem(this); 
 	    }
-	    };//handleSensorData
+	    };//handleDataSensor
 	    
 	    StateFun doWork = () -> {	
 	    try{	
 	     PlanRepeat pr = PlanRepeat.setUp("doWork",-1);
 	    	String myselfName = "doWork";  
+	    	printCurrentEvent(false);
 	    	//onMsg 
 	    	setCurrentMsgFromStore(); 
-	    	curT = Term.createTerm("usercommand(start)");
-	    	if( currentMessage != null && currentMessage.msgId().equals("usercommand") && 
+	    	curT = Term.createTerm("usercmd(start)");
+	    	if( currentMessage != null && currentMessage.msgId().equals("usercmdMsg") && 
 	    		pengine.unify(curT, Term.createTerm("usercmd(CMD)")) && 
 	    		pengine.unify(curT, Term.createTerm( currentMessage.msgContent() ) )){ 
 	    		//println("WARNING: variable substitution not yet fully implemented " ); 
 	    		{//actionseq
 	    		if( (guardVars = QActorUtils.evalTheGuard(this, " !?evalSensor(start)" )) != null ){
+	    		{//actionseq
 	    		temporaryStr = "\"START\"";
-	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
 	    		println( temporaryStr );  
+	    		temporaryStr = QActorUtils.unifyMsgContent(pengine,"cmdToLed(CMD)","cmdToLed(on)", guardVars ).toString();
+	    		sendMsg("cmdToLed","ledonmbot", QActorContext.dispatch, temporaryStr ); 
+	    		};//actionseq
 	    		}
 	    		else{ temporaryStr = "\"DON'T MOVE\"";
-	    		temporaryStr = QActorUtils.substituteVars(guardVars,temporaryStr);
 	    		println( temporaryStr );  
 	    		}};//actionseq
 	    	}
 	    	//onMsg 
 	    	setCurrentMsgFromStore(); 
-	    	curT = Term.createTerm("usercommand(halt)");
-	    	if( currentMessage != null && currentMessage.msgId().equals("usercommand") && 
+	    	curT = Term.createTerm("usercmd(halt)");
+	    	if( currentMessage != null && currentMessage.msgId().equals("usercmdMsg") && 
 	    		pengine.unify(curT, Term.createTerm("usercmd(CMD)")) && 
 	    		pengine.unify(curT, Term.createTerm( currentMessage.msgContent() ) )){ 
 	    		//println("WARNING: variable substitution not yet fully implemented " ); 
 	    		{//actionseq
 	    		temporaryStr = "\"STOP\"";
 	    		println( temporaryStr );  
+	    		temporaryStr = QActorUtils.unifyMsgContent(pengine,"cmdToLed(CMD)","cmdToLed(off)", guardVars ).toString();
+	    		sendMsg("cmdToLed","ledonmbot", QActorContext.dispatch, temporaryStr ); 
 	    		};//actionseq
 	    	}
-	    	repeatPlanNoTransition(pr,myselfName,"mbotcleaner_"+myselfName,false,false);
+	    	repeatPlanNoTransition(pr,myselfName,"mbotcleaner_"+myselfName,false,true);
 	    }catch(Exception e_doWork){  
 	    	 println( getName() + " plan=doWork WARNING:" + e_doWork.getMessage() );
 	    	 QActorContext.terminateQActorSystem(this); 

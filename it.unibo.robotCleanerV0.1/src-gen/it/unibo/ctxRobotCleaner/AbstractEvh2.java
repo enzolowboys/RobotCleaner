@@ -26,7 +26,7 @@ showMsg( event.getPrologRep()  );
 		Term msgPattern = Term.createTerm("usercmd(CMD)");
 				boolean b = this.pengine.unify(msgt, msgPattern);
 				if( b ) {
-			  		sendMsg("usercommand","mbotcleaner", QActorContext.dispatch, msgt.toString() ); 
+			  		sendMsg("usercmdMsg","mbotcleaner", QActorContext.dispatch, msgt.toString() ); 
 				}else{
 					println("non unifiable");
 				}

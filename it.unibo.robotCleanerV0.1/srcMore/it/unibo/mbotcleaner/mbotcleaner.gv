@@ -11,12 +11,12 @@ digraph finite_state_machine {
 	
 	init [ color = red ][ fontcolor = red ][ penwidth = 3 ]
 	waitStart [ color = black ][ fontcolor = black ][ penwidth = 3 ]
-	doWork [ color = blue ][ fontcolor = blue ][ penwidth = 3 ]
-	handleSensorData [ color = blue ][ fontcolor = blue ][ penwidth = 3 ]
+	doWork [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	handleDataSensor [ color = black ][ fontcolor = black ][ penwidth = 3 ]
 	
+	waitStart -> handleDataSensor [ label = "dataSensorMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
 	init -> waitStart [ label = "switch" ][ color = black ][ fontcolor = black ]
 	waitStart -> waitStart [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	waitStart -> doWork [ label = "usercmdMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
 	waitStart -> handleToutBuiltIn [ label = "timeout(36000000)" ][ color = green ][ fontcolor = green ]
-	waitStart -> handleSensorData [ label = "sensorMsg" ][ color = black ][ fontcolor = black ]
-	waitStart -> doWork [ label = "usercommand" ][ color = black ][ fontcolor = black ]
 }
