@@ -4,33 +4,32 @@
  */
 System robotCleaner
 
-Event usercmd      : usercmd(CMD)  		//Can be Start or Stop
-Event sonarSensor  : sonar(NAME, DISTANCE)			//NAME= sonar1 | sonar2 | roversonar
-Event dataSensor : dataSensor(TEMP, TIME)     //Invia la temperatura e l'orario della giornata
+Event usercmd      : usercmd(CMD, TEMP)  		//Can be Start or Stop
+Event tempSensor : tempSensor(TEMP)     //Invia la temperatura e l'orario della giornata
 
 Dispatch cmdToLed : cmdToLed(CMD) //On, Off led
-Dispatch dataSensorMsg : dataSensor(TEMP,TIME)
-Dispatch usercmdMsg : usercmd(CMD)
+Dispatch usercmdMsg : usercmd(CMD, TEMP)
+Dispatch tempSensorMsg : tempSensor(TEMP)
 
 
 Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] -g white
-EventHandler evh for dataSensor -print {	//event-driven ; no Mqtt support yet
- 	forwardEvent mbotcleaner -m dataSensorMsg  	//from event to message
+EventHandler evh for tempSensor -print {	//event-driven ; no Mqtt support yet
+ 	forwardEvent mbotcleanercontroller -m tempSensorMsg  	//from event to message
 }; 
 EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
- 	forwardEvent mbotcleaner -m usercmdMsg  	//from event to message
+ 	forwardEvent mbotcleanercontroller -m usercmdMsg  	//from event to message
 };   
 
-QActor mbotcleaner context ctxRobotCleaner {
+QActor mbotcleanercontroller context ctxRobotCleaner {
 	Rules{
 		eval(ge, X, X).
 		eval(ge, X, V) :- eval(gt, X, V) .
 		eval(le, X, X).
 		eval(le, X, V) :-  eval(lt, X, V).
-		evalSensor(start):- curTemperatureValue(TEMP), eval(lt, TEMP, 25),curTimeValue(TIME),  eval(ge, TIME, 15),eval(lt,TIME,17).
- 		evalSensor(halt) :- curTemperatureValue(TEMP), limitTemperatureValue(MAX), eval(ge, TEMP, MAX).
- 		evalSensor(halt) :- curTimeValue(TIME), limitTimeValue(MIN, _), eval(lt, TIME, MIN).
- 		evalSensor(halt) :- curTimeValue(TIME), limitTimeValue(_, MAX), eval(gt, TIME, MAX).
+		evalCondition(start):- curTemperatureValue(TEMP), eval(lt, TEMP, 25),curTimeValue(TIME),  eval(ge, TIME, 15),eval(le,TIME,17).
+ 		evalCondition(halt) :- curTemperatureValue(TEMP), limitTemperatureValue(MAX), eval(ge, TEMP, MAX).
+ 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(MIN, _), eval(lt, TIME, MIN).
+ 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(_, MAX), eval(gt, TIME, MAX).
  	}
  	
 	Plan init normal [
@@ -40,43 +39,61 @@ QActor mbotcleaner context ctxRobotCleaner {
 	
 	Plan waitStart []
 	transition stopAfter 36000000
-		whenMsg dataSensorMsg -> handleDataSensor,
+		//whenMsg tempSensorMsg -> handletempSensor,
 		whenMsg usercmdMsg -> doWork
 	finally repeatPlan
-	
-	/*aggiorniamo il Resource Model con i valori correnti di Time e Temperature*/
-	Plan handleDataSensor resumeLastPlan[
-		printCurrentEvent;
-		onMsg dataSensorMsg : dataSensor(TEMP,TIME) ->
-			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(TEMP);
-			
-		onMsg dataSensorMsg : dataSensor(TEMP, TIME) -> 
-			ReplaceRule curTimeValue(X)  with curTimeValue(TIME)
-	]
-	
 	
 	/* Il robot parte se è arrivato il messaggio di 'start' e i valori del Sensore (Time e Temperature)
 	 * sono nei parametri accettabili.
 	 * Si ferma quando arriva un messaggio di 'halt'*/
-	Plan doWork resumeLastPlan[
+	 /* Requisiti R-Start, R-TempOk, R-TimeOk, R-Stop*/
+	Plan doWork resumeLastPlan [
 		printCurrentEvent;
-		onMsg usercmdMsg : usercmd(start) -> {
+		
+		actorOp getTime;
+		[ ?? actorOpDone( OP, R )]
+			ReplaceRule curTimeValue(X)  with curTimeValue(R);
 			
-			[!? evalSensor(start)]{
+		onMsg usercmdMsg : usercmd(start, TEMP) -> ReplaceRule curTemperatureValue(X)  with curTemperatureValue(TEMP);
+		onMsg usercmdMsg : usercmd(start, TEMP) -> {
+			[!? evalCondition(start)]{
 				println("START");
-				forward ledonmbot -m cmdToLed : cmdToLed( on )
+				forward ledonmbot -m cmdToLed : cmdToLed(on)
 			}
 			else
-				println("DON'T MOVE")
+				println("CONDITION OF TIME OR TEMP NOT SATISFIED")
 		};
 		
-		onMsg usercmdMsg : usercmd(halt) -> {
+		onMsg usercmdMsg : usercmd(halt, TEMP) -> {
 			println("STOP");
-			forward ledonmbot -m cmdToLed : cmdToLed( off )
+			forward ledonmbot -m cmdToLed : cmdToLed(off)
 		}
 		
 	]
+	switchTo handleConditionStop
 	
+	Plan handleConditionStop [
+		actorOp getTime;
+		[?? actorOpDone( OP, TIME )]
+			ReplaceRule curTimeValue(X)  with curTimeValue(TIME);
+		
+		[!? evalCondition(halt)] {
+			println("STOP");
+			forward ledonmbot -m cmdToLed : cmdToLed(off)
+		}
+			
+	]
+	transition whenTime 10000 -> handleConditionStop
+		whenMsg tempSensorMsg -> handletempSensor,
+		whenMsg usercmdMsg -> doWork
+	finally repeatPlan
+	
+	/*aggiorniamo il Resource Model con i valori correnti di Time e Temperature*/
+	Plan handletempSensor resumeLastPlan[
+		printCurrentEvent;
+		onMsg tempSensorMsg : tempSensor(TEMP) ->
+			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(TEMP)
+	]
 //TODO: TESTING,FIXED OBSTACLE,QActor Sonar
 	
 }
@@ -103,6 +120,8 @@ QActor ledonmbot context ctxRobotCleaner {
 }
 
 
+
+
 QActor tester context ctxRobotCleaner {
 	
 	Plan init normal[
@@ -112,8 +131,9 @@ QActor tester context ctxRobotCleaner {
 	
 	Plan test[
 		printCurrentEvent;
+		emit tempSensor : tempSensor(24,16);
+		delay 500;
 		emit usercmd : usercmd(start);
-		emit dataSensor : dataSensor(24,16);
 		delay 10000;
 		emit usercmd : usercmd(halt)		
 	]
