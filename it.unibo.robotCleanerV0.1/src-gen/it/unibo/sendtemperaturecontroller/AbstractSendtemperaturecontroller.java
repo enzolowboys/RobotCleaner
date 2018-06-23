@@ -107,7 +107,9 @@ public abstract class AbstractSendtemperaturecontroller extends QActor {
 	    try{	
 	     PlanRepeat pr = PlanRepeat.setUp("catchTemperature",-1);
 	    	String myselfName = "catchTemperature";  
-	    	if( (guardVars = QActorUtils.evalTheGuard(this, " ??actorOpDone(TEMP,R)" )) != null ){
+	    	parg = "getTemperature"; 
+	    	actorOpExecute(parg, false);	//OCT17		 
+	    	if( (guardVars = QActorUtils.evalTheGuard(this, " ??actorOpDone(R)" )) != null ){
 	    	//not here genMove StateMoveNormal}
 	    	//onMsg 
 	    	setCurrentMsgFromStore(); 

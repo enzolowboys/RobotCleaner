@@ -9,9 +9,9 @@ Dispatch tempSensor : tempSensor(TEMP)
 Dispatch consolecmd : consolecmd(CMD)
 
 
-Context ctxRobotCleaner ip [ host="localhost"   port=8032 ]
+Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] 
 Context ctxConsoleRobotGui ip [host="localhost" port=8034 ] -g yellow
-Context ctxControlTemperature ip [host="localhost" port=8033]
+Context ctxControlTemperature ip [host="localhost" port=8033] -g white
 
 EventHandler evh4 for usercmd -print {	//event-driven ; no Mqtt support yet
  	forwardEvent console -m usercmdMsg  	//from event to message
@@ -58,3 +58,16 @@ QActor console context ctxConsoleRobotGui {
 		
 	
 } 
+
+QActor tester context ctxConsoleRobotGui {
+	 
+	 Plan init normal[]
+	 switchTo test
+	 
+	 Plan test [
+	 	forward console -m consolecmd : consolecmd(start);
+	 	delay 1000;
+	 	forward console -m tempSensor : tempSensor(23)
+	 ]
+	 
+}

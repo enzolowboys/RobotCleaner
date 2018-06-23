@@ -10,7 +10,7 @@ public static QActorContext initTheContext() throws Exception{
 	IOutputEnvView outEnvView = SituatedSysKb.standardOutEnvView;
 	String webDir = null;
 	return QActorContext.initQActorSystem(
-		"ctxcontroltemperature", "./srcMore/it/unibo/ctxControlTemperature/controlvalue.pl", 
+		"ctxcontroltemperature", "./srcMore/it/unibo/ctxControlTemperature/consolecontrolvalue.pl", 
 		"./srcMore/it/unibo/ctxControlTemperature/sysRules.pl", outEnvView,webDir,false);
 }
 public static void main(String[] args) throws Exception{

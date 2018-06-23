@@ -2,7 +2,7 @@
  * i dati della temperatura tramite API restful (che implementeremo in  seguito) esso restituisce la temperatura corrente.
  */
  
- System controlValue
+ System consoleControlValue
  
  Event usercmd: usercmd(CMD,TEMP) 
  
@@ -41,8 +41,9 @@ EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
 	 
 	 
 	 Plan catchTemperature resumeLastPlan [ //  piano specifico che si verifica quando qui invio la temperatura alla gui 
-	
-		[?? actorOpDone(TEMP,R)]
+		
+		actorOp getTemperature;
+		[?? actorOpDone(R)]
 			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(R);
 			
 		onMsg tempSensor : tempSensor(giveMeTemp) -> sendto console in ctxConsoleRobotGui -m tempSensor : tempSensor(TEMP)
@@ -70,7 +71,7 @@ EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
 	
 	 }
  
- 
+
  
  
  
