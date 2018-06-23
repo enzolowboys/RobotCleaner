@@ -90,15 +90,19 @@ public abstract class AbstractTester extends QActor {
 	     PlanRepeat pr = PlanRepeat.setUp("test",-1);
 	    	String myselfName = "test";  
 	    	printCurrentEvent(false);
-	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "usercmd(CMD)","usercmd(start)", guardVars ).toString();
+	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "tempSensor(TEMP)","tempSensor(24,16)", guardVars ).toString();
+	    	emit( "tempSensor", temporaryStr );
+	    	//delay  ( no more reactive within a plan)
+	    	aar = delayReactive(500,"" , "");
+	    	if( aar.getInterrupted() ) curPlanInExec   = "test";
+	    	if( ! aar.getGoon() ) return ;
+	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "usercmd(CMD,TEMP)","usercmd(start)", guardVars ).toString();
 	    	emit( "usercmd", temporaryStr );
-	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "dataSensor(TEMP,TIME)","dataSensor(24,16)", guardVars ).toString();
-	    	emit( "dataSensor", temporaryStr );
 	    	//delay  ( no more reactive within a plan)
 	    	aar = delayReactive(10000,"" , "");
 	    	if( aar.getInterrupted() ) curPlanInExec   = "test";
 	    	if( ! aar.getGoon() ) return ;
-	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "usercmd(CMD)","usercmd(halt)", guardVars ).toString();
+	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "usercmd(CMD,TEMP)","usercmd(halt)", guardVars ).toString();
 	    	emit( "usercmd", temporaryStr );
 	    	repeatPlanNoTransition(pr,myselfName,"tester_"+myselfName,false,false);
 	    }catch(Exception e_test){  

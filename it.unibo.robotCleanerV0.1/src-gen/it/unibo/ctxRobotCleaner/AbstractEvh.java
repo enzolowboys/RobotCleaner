@@ -23,10 +23,10 @@ showMsg( event.getPrologRep()  );
 //showMsg( "---------------------------------------------------------------------" );	
 		{
 		Term msgt       = Term.createTerm(event.getMsg());
-		Term msgPattern = Term.createTerm("dataSensor(TEMP,TIME)");
+		Term msgPattern = Term.createTerm("tempSensor(TEMP)");
 				boolean b = this.pengine.unify(msgt, msgPattern);
 				if( b ) {
-			  		sendMsg("dataSensorMsg","mbotcleaner", QActorContext.dispatch, msgt.toString() ); 
+			  		sendMsg("tempSensorMsg","mbotcleanercontroller", QActorContext.dispatch, msgt.toString() ); 
 				}else{
 					println("non unifiable");
 				}

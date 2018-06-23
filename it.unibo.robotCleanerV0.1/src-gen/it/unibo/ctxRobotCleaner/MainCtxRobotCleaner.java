@@ -8,13 +8,9 @@ public class MainCtxRobotCleaner  {
 //MAIN
 public static QActorContext initTheContext() throws Exception{
 	IOutputEnvView outEnvView = SituatedSysKb.standardOutEnvView;
-	it.unibo.is.interfaces.IBasicEnvAwt env=new it.unibo.baseEnv.basicFrame.EnvFrame( 
-		"Env_ctxRobotCleaner",java.awt.Color.white , java.awt.Color.black );
-	env.init();
-	outEnvView = env.getOutputEnvView();
 	String webDir = null;
 	return QActorContext.initQActorSystem(
-		"ctxrobotcleaner", "./srcMore/it/unibo/ctxRobotCleaner/robotcleaner.pl", 
+		"ctxrobotcleaner", "./srcMore/it/unibo/ctxRobotCleaner/consolerobotgui.pl", 
 		"./srcMore/it/unibo/ctxRobotCleaner/sysRules.pl", outEnvView,webDir,false);
 }
 public static void main(String[] args) throws Exception{
