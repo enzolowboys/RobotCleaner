@@ -10,7 +10,7 @@ public static QActorContext initTheContext() throws Exception{
 	IOutputEnvView outEnvView = SituatedSysKb.standardOutEnvView;
 	String webDir = null;
 	return QActorContext.initQActorSystem(
-		"ctxrobotcleaner", "./srcMore/it/unibo/ctxRobotCleaner/consolerobotgui.pl", 
+		"ctxrobotcleaner", "./srcMore/it/unibo/ctxRobotCleaner/controlvalue.pl", 
 		"./srcMore/it/unibo/ctxRobotCleaner/sysRules.pl", outEnvView,webDir,false);
 }
 public static void main(String[] args) throws Exception{
