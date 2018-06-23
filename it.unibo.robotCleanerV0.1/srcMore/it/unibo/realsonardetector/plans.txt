@@ -1,0 +1,3 @@
+plan(1,init, sentence(true,move(print("sonardetector STARTS ")),'','' ))
+plan(1,handleRealSonar, sentence(true,printCurrentEvent(false),'','' ))
+plan(2,handleRealSonar, sentence(true,eventswitch(realSonar, »sonar( DISTANCE), raise( sonarSensor , sonar( realsonar,DISTANCE) )') ),'','' ))

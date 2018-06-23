@@ -1,0 +1,27 @@
+/*
+*
+* A GraphViz DOT FSM description 
+* Please use a GraphViz visualizer (like http://www.webgraphviz.com)
+*  
+*/
+
+digraph finite_state_machine {
+	rankdir=LR
+	size="8,5"
+	
+	init [ color = red ][ fontcolor = red ][ penwidth = 3 ]
+	handleConditionStop [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	waitStart [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	handletempSensor [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	doWork [ color = black ][ fontcolor = black ][ penwidth = 3 ]
+	
+	handleConditionStop -> doWork [ label = "usercmdMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
+	handleConditionStop -> handleConditionStop [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	handleConditionStop -> handletempSensor [ label = "tempSensorMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
+	init -> waitStart [ label = "switch" ][ color = black ][ fontcolor = black ]
+	waitStart -> waitStart [ label = "repeat "][ style = dashed ][ color = blue ][ fontcolor = blue ]
+	handleConditionStop -> handleConditionStop [ label = "timeout(10000)" ][ color = green ][ fontcolor = green ]
+	waitStart -> doWork [ label = "usercmdMsg" ][ color = red ][ fontcolor = red ][ dir = both ]
+	doWork -> handleConditionStop [ label = "switch" ][ color = black ][ fontcolor = black ]
+	waitStart -> handleToutBuiltIn [ label = "timeout(36000000)" ][ color = green ][ fontcolor = green ]
+}
