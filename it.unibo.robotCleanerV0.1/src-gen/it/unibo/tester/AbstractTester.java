@@ -74,8 +74,6 @@ public abstract class AbstractTester extends QActor {
 	    try{	
 	     PlanRepeat pr = PlanRepeat.setUp("init",-1);
 	    	String myselfName = "init";  
-	    	temporaryStr = "\"Start Test\"";
-	    	println( temporaryStr );  
 	    	//switchTo test
 	        switchToPlanAsNextState(pr, myselfName, "tester_"+myselfName, 
 	              "test",false, false, null); 
@@ -89,21 +87,14 @@ public abstract class AbstractTester extends QActor {
 	    try{	
 	     PlanRepeat pr = PlanRepeat.setUp("test",-1);
 	    	String myselfName = "test";  
-	    	printCurrentEvent(false);
-	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "tempSensor(TEMP)","tempSensor(24,16)", guardVars ).toString();
-	    	emit( "tempSensor", temporaryStr );
+	    	temporaryStr = QActorUtils.unifyMsgContent(pengine,"consolecmd(CMD)","consolecmd(start)", guardVars ).toString();
+	    	sendMsg("consolecmd","console", QActorContext.dispatch, temporaryStr ); 
 	    	//delay  ( no more reactive within a plan)
-	    	aar = delayReactive(500,"" , "");
+	    	aar = delayReactive(1000,"" , "");
 	    	if( aar.getInterrupted() ) curPlanInExec   = "test";
 	    	if( ! aar.getGoon() ) return ;
-	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "usercmd(CMD,TEMP)","usercmd(start)", guardVars ).toString();
-	    	emit( "usercmd", temporaryStr );
-	    	//delay  ( no more reactive within a plan)
-	    	aar = delayReactive(10000,"" , "");
-	    	if( aar.getInterrupted() ) curPlanInExec   = "test";
-	    	if( ! aar.getGoon() ) return ;
-	    	temporaryStr = QActorUtils.unifyMsgContent(pengine, "usercmd(CMD,TEMP)","usercmd(halt)", guardVars ).toString();
-	    	emit( "usercmd", temporaryStr );
+	    	temporaryStr = QActorUtils.unifyMsgContent(pengine,"tempSensor(TEMP)","tempSensor(23)", guardVars ).toString();
+	    	sendMsg("tempSensor","console", QActorContext.dispatch, temporaryStr ); 
 	    	repeatPlanNoTransition(pr,myselfName,"tester_"+myselfName,false,false);
 	    }catch(Exception e_test){  
 	    	 println( getName() + " plan=test WARNING:" + e_test.getMessage() );

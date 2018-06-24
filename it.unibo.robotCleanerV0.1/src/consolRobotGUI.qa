@@ -13,7 +13,7 @@ Context ctxRobotCleaner ip [ host="localhost"   port=8032 ]
 Context ctxConsoleRobotGui ip [host="localhost" port=8034 ] -g yellow
 Context ctxControlTemperature ip [host="localhost" port=8033] -g white
 
-EventHandler evh4 for usercmd -print {	//event-driven ; no Mqtt support yet
+EventHandler evh5 for usercmd -print {	//event-driven ; no Mqtt support yet
  	forwardEvent console -m usercmdMsg  	//from event to message
 };
 
@@ -59,6 +59,8 @@ QActor console context ctxConsoleRobotGui {
 	
 } 
 
+ 
+
 QActor tester context ctxConsoleRobotGui {
 	 
 	 Plan init normal[]
@@ -71,3 +73,4 @@ QActor tester context ctxConsoleRobotGui {
 	 ]
 	 
 }
+

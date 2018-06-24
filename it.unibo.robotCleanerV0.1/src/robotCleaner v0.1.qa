@@ -120,7 +120,7 @@ QActor ledonmbot context ctxRobotCleaner {
 }
 
 
-
+/* 
 
 QActor tester context ctxRobotCleaner {
 	
@@ -138,3 +138,4 @@ QActor tester context ctxRobotCleaner {
 		emit usercmd : usercmd(halt)		
 	]
 }
+* */

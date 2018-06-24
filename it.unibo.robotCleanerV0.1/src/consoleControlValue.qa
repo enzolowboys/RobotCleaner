@@ -9,10 +9,10 @@
  Dispatch tempSensor : tempSensor(TEMP)  
  Dispatch usercmdMsg : usercmd(CMD, TEMP)
  
- Context ctxControlTemperature ip [host="localhost"    port=8033]
- Context ctxRobotCleaner ip [host="localhost"   port=8032 ]
- Context ctxConsoleRobotGui ip [host="localhost"  port=8034]
-    
+ Context ctxControlTemperature ip [host="localhost" port=8033] 
+ Context ctxRobotCleaner ip [host="localhost"   port=8032 ] 
+ Context ctxConsoleRobotGui ip [host="localhost"  port=8034] 
+ 
  	
 EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
  	forwardEvent sendtemperaturecontroller -m usercmdMsg  	//from event to message
@@ -47,27 +47,25 @@ EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
 			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(R);
 			
 		onMsg tempSensor : tempSensor(giveMeTemp) -> sendto console in ctxConsoleRobotGui -m tempSensor : tempSensor(TEMP)
-		]
+	]
 		switchTo handleCondition
 		
 
 /*  piano che controlla continuamente il valore della temperatura esterna e se non rispetta i parametri manda un messaggio al robot dicendogli di fermarsi altrimenti
  aggiorna le condizioni */
-	  Plan handleCondition [
-			
-	  actorOp getTemperature;
+	 Plan handleCondition [
+		actorOp getTemperature;
 		[?? actorOpDone(R)]
 			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(R);
 			
 			
-	 [!? evalCondition(halt)] {
+	 	[!? evalCondition(halt)] {
 			println("STOP");
 			onMsg usercmdMsg : usercmd(halt, TEMP) -> sendto mbotcleanercontroller in  ctxRobotCleaner -m usercmdMsg : usercmd(halt,TEMP)
-			   }
-			]
-			  transition whenTime 10000 -> handleCondition   
-			  
-	    finally repeatPlan
+			}
+		]
+		transition whenTime 10000 -> handleCondition   
+		finally repeatPlan
 	
 	 }
  

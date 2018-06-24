@@ -8,9 +8,13 @@ public class MainCtxControlTemperature  {
 //MAIN
 public static QActorContext initTheContext() throws Exception{
 	IOutputEnvView outEnvView = SituatedSysKb.standardOutEnvView;
+	it.unibo.is.interfaces.IBasicEnvAwt env=new it.unibo.baseEnv.basicFrame.EnvFrame( 
+		"Env_ctxControlTemperature",java.awt.Color.white , java.awt.Color.black );
+	env.init();
+	outEnvView = env.getOutputEnvView();
 	String webDir = null;
 	return QActorContext.initQActorSystem(
-		"ctxcontroltemperature", "./srcMore/it/unibo/ctxControlTemperature/consolecontrolvalue.pl", 
+		"ctxcontroltemperature", "./srcMore/it/unibo/ctxControlTemperature/consolerobotgui.pl", 
 		"./srcMore/it/unibo/ctxControlTemperature/sysRules.pl", outEnvView,webDir,false);
 }
 public static void main(String[] args) throws Exception{
