@@ -11,6 +11,8 @@ Dispatch cmdToLed : cmdToLed(CMD) //On, Off led
 Dispatch usercmdMsg : usercmd(CMD, TEMP)
 Dispatch tempSensorMsg : tempSensor(TEMP)
 
+Dispatch initCmd : initCmd
+
 Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] -g white
 EventHandler evh for tempSensor -print {	//event-driven ; no Mqtt support yet
  	forwardEvent mbotcleanercontroller -m tempSensorMsg  	//from event to message

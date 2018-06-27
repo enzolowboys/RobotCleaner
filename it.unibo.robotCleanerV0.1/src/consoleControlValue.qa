@@ -1,5 +1,6 @@
 /*modello dell'analisi dei requisiti relativo al servizio API che invia al robot 
- * i dati della temperatura tramite API restful (che implementeremo in  seguito) esso restituisce la temperatura corrente.
+ * i dati della temperatura tramite API restful (che implementeremo in  seguito) esso restituisce la temperatura al robo quando essa non 
+ * rientra nei parametri
  */
  
  System consoleControlValue
