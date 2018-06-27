@@ -1,0 +1,78 @@
+/*modello dell'analisi dei requisiti relativo al servizio API che invia al robot 
+ * i dati della temperatura tramite API restful (che implementeremo in  seguito) esso restituisce la temperatura al robo quando essa non 
+ * rientra nei parametri
+ */
+ 
+ System consoleControlValue
+ 
+ Event usercmd: usercmd(CMD,TEMP) 
+ 
+ Dispatch tempSensor : tempSensor(TEMP)  
+ Dispatch usercmdMsg : usercmd(CMD, TEMP)
+ 
+ Context ctxControlTemperature ip [host="localhost" port=8033] 
+ Context ctxRobotCleaner ip [host="localhost"   port=8032 ] 
+ Context ctxConsoleRobotGui ip [host="localhost"  port=8034] 
+ 
+ 	
+EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
+ 	forwardEvent sendtemperaturecontroller -m usercmdMsg  	//from event to message
+};
+ QActor  sendtemperaturecontroller context ctxControlTemperature {
+ 	Rules{
+		eval(ge, X, X).
+		eval(ge, X, V) :- eval(gt, X, V) .
+		eval(le, X, X).
+		eval(le, X, V) :-  eval(lt, X, V).
+		evalCondition(start):- curTemperatureValue(TEMP), eval(lt, TEMP, 25),curTimeValue(TIME),  eval(ge, TIME, 15),eval(le,TIME,17).
+ 		evalCondition(halt) :- curTemperatureValue(TEMP), limitTemperatureValue(MAX), eval(ge, TEMP, MAX).
+ 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(MIN, _), eval(lt, TIME, MIN).
+ 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(_, MAX), eval(gt, TIME, MAX).
+ 	}
+ 	
+ 	Plan init normal [
+		println("Robot Ready")
+	]
+	switchTo waitStart
+	
+	Plan waitStart []
+	 transition stopAfter 360000 // 1h
+	 whenMsg tempSensor->catchTemperature  
+	 finally repeatPlan
+	 
+	 
+	 Plan catchTemperature resumeLastPlan [ //  piano specifico che si verifica quando qui invio la temperatura alla gui 
+		
+		actorOp getTemperature;
+		[?? actorOpDone(R)]
+			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(R);
+			
+		onMsg tempSensor : tempSensor(giveMeTemp) -> sendto console in ctxConsoleRobotGui -m tempSensor : tempSensor(TEMP)
+	]
+		switchTo handleCondition
+		
+
+/*  piano che controlla continuamente il valore della temperatura esterna e se non rispetta i parametri manda un messaggio al robot dicendogli di fermarsi altrimenti
+ aggiorna le condizioni */
+	 Plan handleCondition [
+		actorOp getTemperature;
+		[?? actorOpDone(R)]
+			ReplaceRule curTemperatureValue(X)  with curTemperatureValue(R);
+			
+			
+	 	[!? evalCondition(halt)] {
+			println("STOP");
+			onMsg usercmdMsg : usercmd(halt, TEMP) -> sendto mbotcleanercontroller in  ctxRobotCleaner -m usercmdMsg : usercmd(halt,TEMP)
+			}
+		]
+		transition whenTime 10000 -> handleCondition   
+		finally repeatPlan
+	
+	 }
+ 
+
+ 
+ 
+ 
+ 
+ 

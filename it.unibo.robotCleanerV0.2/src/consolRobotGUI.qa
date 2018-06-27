@@ -1,0 +1,76 @@
+System consoleRobotGui
+
+Event usercmd : usercmd(CMD, TEMP)
+
+
+
+Dispatch usercmdMsg : usercmd(CMD, TEMP)
+Dispatch tempSensor : tempSensor(TEMP)
+Dispatch consolecmd : consolecmd(CMD)
+
+
+Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] 
+Context ctxConsoleRobotGui ip [host="localhost" port=8034 ] -g yellow
+Context ctxControlTemperature ip [host="localhost" port=8033] -g white
+
+EventHandler evh5 for usercmd -print {	//event-driven ; no Mqtt support yet
+ 	forwardEvent console -m usercmdMsg  	//from event to message
+};
+
+/*Avviare prima la console grafica */
+QActor console context ctxConsoleRobotGui {
+	
+	
+	Plan init normal[
+		
+		println("Console Ready")
+	]
+	switchTo auth
+	
+	//Stato dell'autenticazine dell'Utente, se viene effettuato lo start a consoleStart
+	Plan auth []
+	transition stopAfter 360000
+		whenMsg consolecmd -> consoleStart
+	finally repeatPlan
+	
+	//Ho ricevuto lo start e Invio messaggio al control Temperature per sapere la temperatura
+	Plan consoleStart resumeLastPlan[
+		println("Console Start");
+		printCurrentEvent;
+		onMsg consolecmd : consolecmd(start) -> {
+			sendto sendtemperaturecontrol in ctxControlTemperature -m tempSensor : tempSensor(giveMeTemp)
+		};
+		onMsg consolecmd : consolecmd(halt) -> {
+			sendto mbotcleanercontroller in ctxRobotCleaner -m usercmdMsg : usercmd(halt,TEMP)
+		}
+	]
+	transition stopAfter 3600000
+	whenMsg tempSensor -> consolework
+	
+	//Ricevo la temperatura e mando la temperatura e lo start al robot
+	Plan consolework resumeLastPlan[
+		println("Console work");
+		printCurrentEvent;
+		onMsg tempSensor : tempSensor(TEMP) -> {
+				sendto mbotcleanercontroller in ctxRobotCleaner -m usercmdMsg : usercmd(start,TEMP)
+			}
+		]
+		
+	
+} 
+
+ 
+
+QActor tester context ctxConsoleRobotGui {
+	 
+	 Plan init normal[]
+	 switchTo test
+	 
+	 Plan test [
+	 	forward console -m consolecmd : consolecmd(start);
+	 	delay 1000;
+	 	forward console -m tempSensor : tempSensor(23)
+	 ]
+	 
+}
+

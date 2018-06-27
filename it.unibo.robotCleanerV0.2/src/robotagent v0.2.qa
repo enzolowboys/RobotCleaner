@@ -1,0 +1,116 @@
+System robotCleaner
+
+Event sonarSensor  : sonar( NAME, DISTANCE )	//From rover or real robot
+
+
+Event mindcmd     : usercmd(CMD)	//verso mbot per comandare i moveimenti robot
+Event usercmd     : usercmd(CMD, TEMP)	//verso mbotcleanercontroller per fermare il robot
+
+Dispatch initCmd : initCmd	//da mbotcleanercontroller per far partire effettivmanete il robot
+Dispatch stopCmd : stopCmd
+
+Dispatch hopemobile   : hopemobile(  ARG  )
+Dispatch atsonar1     : atsonar1(  DISTANCE )
+Dispatch atsonar2     : atsonar2(  DISTANCE )
+Dispatch waitAnswer   : waitAnswer(  ARG  )
+
+Dispatch avoidancetodo     : avoidancetodo( ARGS )	    //to 
+Dispatch avoidancedone     : avoidancedone( ARGS )	    //From other agents
+
+Dispatch redoWork     : redoWork(  ARG  )
+
+Context ctxRobotCleaner ip [ host="localhost"   port=8040 ]
+
+QActor mbotagent context ctxRobotCleaner -pubsub{    
+	
+	Plan init normal [  ]  
+	switchTo waitStartRobot
+	  
+	Plan waitStartRobot  [     
+		println("mbotagent waitStartRobot");
+		println( "POSITION THE ROBOT AT SONAR1 AND SEND START COMMAND")
+	]  
+	transition   stopAfter 6000000        
+ 		whenEvent  initCmd  -> doWork 	 
+ 	finally repeatPlan
+
+	Plan doWork  [     
+		println("mbotagent doWork")
+	]   
+	transition   stopAfter 6000000        
+ 		whenEvent  sonarSensor  -> handleSonarEvents 	 
+ 	finally repeatPlan
+ 	
+ 	Plan handleSonarEvents resumeLastPlan [ 
+		onEvent sonarSensor : sonar(roversonar, DISTANCE) -> {
+		emit mindcmd : usercmd( robotgui(h(low)) ) ;	//stop
+		println(sonar(roversonar));			
+		emit mindcmd : usercmd( robotgui(d(low)) ) ;	//right
+		forward mbotagent -m hopemobile : hopemobile("")
+		} 
+  		//other events are ignored 
+  	 ]  	  
+  	 transition stopAfter 600000
+  	 	whenMsg hopemobile -> checkMobileObstacle ,
+  	 	whenMsg atsonar1   -> robotAtSonar1 ,
+  	 	whenMsg atsonar2   -> robotAtSonar2  
+  	 	
+  	 Plan checkMobileObstacle [
+   		println("checkMobileObstacle");
+ 		emit mindcmd : usercmd( robotgui(a(low)) ) ;	//left 	 		 	
+   		delay 1000  //hope that it will move  
+  	 ]  
+  	 transition whenTime 1000 -> doWork
+  	 	whenEvent sonarSensor -> fixedObstacle
+  	  
+  	 Plan fixedObstacle [ 
+  	 	println("fixedobstaclee");
+		emit mindcmd : usercmd( robotgui(d(low)) ) ;	//right
+//		println("emitting  tasktodo ") ;
+		delay 700;
+		forward roverobstacleavoiadanceagent -m waitAnswer : waitAnswer("obstacleAvoidance")
+ 		
+  	 ]
+  	 transition stopAfter 600000
+     	 whenMsg waitAnswer -> doWaitAnswer
+  	   	 
+  	 Plan robotAtSonar1 [
+   	 	printCurrentMessage
+   	 ]
+  	 switchTo doWork
+  	 
+  	 Plan robotAtSonar2[
+//  	delay 200 ; //disengage  //do not disengage until pos verified
+		//R-End
+  	 	emit mindcmd : usercmd(robotgui(h(low)));
+   	 	forward mbotagent -m redoWork  : redoWork( "" )
+  	 ]
+  	 switchTo waitStartRobot
+    	
+     Plan doWaitAnswer[
+  	 	println("mbotagent WAITS that a passage is found") 
+  	 ]
+  	 transition whenTime 60000 -> noAnswer  	//could be disconnected
+		whenMsg avoidancedone -> checkTheAnswer 
+	 
+  	 Plan checkTheAnswer resumeLastPlan [
+  	 	printCurrentEvent ;
+  	 	onMsg avoidancedone : avoidancedone("ok") -> addRule goon;
+  	 	//R-Obstacle --> dico al robotCleaner di fermarsi
+  	 	onMsg avoidancedone : avoidancedone("unavoidable") -> emit mindcmd : usercmd(robotgui(h(low)))
+     ]	
+   	 switchTo [ ??goon  ] doWork
+ 
+ 	Plan noAnswer[
+ 		//Probabilmente un ostacolo era troppo difficile o impossibile da evitare
+ 		println("mbotagent no answer received. Stop mbot");
+ 		//R-Obstacle --> dico al robotCleaner di fermarsi
+ 		emit mindcmd : usercmd(robotgui(h(low)))
+ 	]
+ }
+
+
+QActor roverobstacleavoiadanceagent context ctxRobotCleaner -pubsub{    
+
+	Plan init normal [  ]  
+}
