@@ -9,7 +9,7 @@ Dispatch tempSensor : tempSensor(TEMP)
 Dispatch consolecmd : consolecmd(CMD)
 
 
-Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] 
+Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] -g white
 Context ctxConsoleRobotGui ip [host="localhost" port=8034 ] -g yellow
 Context ctxControlTemperature ip [host="localhost" port=8033] -g white
 

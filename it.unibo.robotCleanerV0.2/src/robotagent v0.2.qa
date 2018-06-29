@@ -23,6 +23,7 @@ Context ctxRobotCleaner ip [ host="localhost"   port=8040 ]
 
 QActor mbotagent context ctxRobotCleaner -pubsub{    
 	
+	
 	Plan init normal [  ]  
 	switchTo waitStartRobot
 	  
@@ -43,10 +44,10 @@ QActor mbotagent context ctxRobotCleaner -pubsub{
  	
  	Plan handleSonarEvents resumeLastPlan [ 
 		onEvent sonarSensor : sonar(roversonar, DISTANCE) -> {
-		emit mindcmd : usercmd( robotgui(h(low)) ) ;	//stop
-		println(sonar(roversonar));			
-		emit mindcmd : usercmd( robotgui(d(low)) ) ;	//right
-		forward mbotagent -m hopemobile : hopemobile("")
+			emit mindcmd : usercmd( robotgui(h(low)) ) ;	//stop
+			println(sonar(roversonar));			
+			emit mindcmd : usercmd( robotgui(d(low)) ) ;	//right
+			forward mbotagent -m hopemobile : hopemobile("")
 		} 
   		//other events are ignored 
   	 ]  	  
@@ -99,7 +100,7 @@ QActor mbotagent context ctxRobotCleaner -pubsub{
   	 	//R-Obstacle --> dico al robotCleaner di fermarsi
   	 	onMsg avoidancedone : avoidancedone("unavoidable") -> emit mindcmd : usercmd(robotgui(h(low)))
      ]	
-   	 switchTo [ ??goon  ] doWork
+   	 switchTo [ ??goon ] doWork
  
  	Plan noAnswer[
  		//Probabilmente un ostacolo era troppo difficile o impossibile da evitare

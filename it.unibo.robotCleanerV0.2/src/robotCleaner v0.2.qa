@@ -24,19 +24,14 @@ EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
 };   
 
 QActor mbotcleanercontroller context ctxRobotCleaner {
-	Rules{
-		eval(ge, X, X).
-		eval(ge, X, V) :- eval(gt, X, V) .
-		eval(le, X, X).
-		eval(le, X, V) :-  eval(lt, X, V).
-		evalCondition(start):- curTemperatureValue(TEMP), eval(lt, TEMP, 25),curTimeValue(TIME),  eval(ge, TIME, 15),eval(le,TIME,17).
- 		evalCondition(halt) :- curTemperatureValue(TEMP), limitTemperatureValue(MAX), eval(ge, TEMP, MAX).
- 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(MIN, _), eval(lt, TIME, MIN).
- 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(_, MAX), eval(gt, TIME, MAX).
- 	}
- 	
+	
 	Plan init normal [
-		println("Robot Ready")		
+		demo consult("./src/model/robotCleaner.pl");
+		println("Robot Ready");
+		[!? eval(ge,20,20)]	
+			println("Entrato")
+		else
+			println("Non entrato")
 	]
 	switchTo waitStart
 	
@@ -53,14 +48,17 @@ QActor mbotcleanercontroller context ctxRobotCleaner {
 	Plan doWork resumeLastPlan [
 		printCurrentEvent;
 		
+		/* 
 		actorOp getTime;
 		[ ?? actorOpDone( OP, R )]
-			ReplaceRule curTimeValue(X)  with curTimeValue(R);
+		* */
+	
+		addRule curTimeValue(16);
 			
 		onMsg usercmdMsg : usercmd(start, TEMP) -> ReplaceRule curTemperatureValue(X)  with curTemperatureValue(TEMP);
 		onMsg usercmdMsg : usercmd(start, TEMP) -> {
 			[!? evalCondition(start)]{
-				forward mbotagent -m initCmd : initCmd;	    //dico alla mbotangent (mind) di fermarsi
+				//forward mbotagent -m initCmd : initCmd;	    //dico alla mbotangent (mind) di fermarsi
 				forward ledonmbot -m cmdToLed : cmdToLed(on)
 			}
 			else
@@ -76,10 +74,11 @@ QActor mbotcleanercontroller context ctxRobotCleaner {
 	switchTo handleConditionStop
 	
 	Plan handleConditionStop [
+		/* 
 		actorOp getTime;
 		[?? actorOpDone( OP, TIME )]
 			ReplaceRule curTimeValue(X)  with curTimeValue(TIME);
-		
+		*/
 		[!? evalCondition(halt)] {
 			println("STOP");
 			forward ledonmbot -m cmdToLed : cmdToLed(off)
@@ -138,11 +137,9 @@ QActor tester context ctxRobotCleaner {
 	
 	Plan test[
 		printCurrentEvent;
-		emit tempSensor : tempSensor(24,16);
-		delay 500;
-		emit usercmd : usercmd(start);
+		emit usercmd : usercmd(start,24);
 		delay 10000;
-		emit usercmd : usercmd(halt)		
+		emit usercmd : usercmd(halt,"-1")		
 	]
 }
 

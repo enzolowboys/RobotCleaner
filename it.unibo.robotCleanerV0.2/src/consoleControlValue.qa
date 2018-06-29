@@ -11,7 +11,7 @@
  Dispatch usercmdMsg : usercmd(CMD, TEMP)
  
  Context ctxControlTemperature ip [host="localhost" port=8033] 
- Context ctxRobotCleaner ip [host="localhost"   port=8032 ] 
+ Context ctxRobotCleaner ip [host="localhost"   port=8032 ]
  Context ctxConsoleRobotGui ip [host="localhost"  port=8034] 
  
  	
@@ -19,18 +19,9 @@ EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
  	forwardEvent sendtemperaturecontroller -m usercmdMsg  	//from event to message
 };
  QActor  sendtemperaturecontroller context ctxControlTemperature {
- 	Rules{
-		eval(ge, X, X).
-		eval(ge, X, V) :- eval(gt, X, V) .
-		eval(le, X, X).
-		eval(le, X, V) :-  eval(lt, X, V).
-		evalCondition(start):- curTemperatureValue(TEMP), eval(lt, TEMP, 25),curTimeValue(TIME),  eval(ge, TIME, 15),eval(le,TIME,17).
- 		evalCondition(halt) :- curTemperatureValue(TEMP), limitTemperatureValue(MAX), eval(ge, TEMP, MAX).
- 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(MIN, _), eval(lt, TIME, MIN).
- 		evalCondition(halt) :- curTimeValue(TIME), limitTimeValue(_, MAX), eval(gt, TIME, MAX).
- 	}
- 	
+ 
  	Plan init normal [
+ 		demo consult("./src/model/controlValue.pl");
 		println("Robot Ready")
 	]
 	switchTo waitStart
