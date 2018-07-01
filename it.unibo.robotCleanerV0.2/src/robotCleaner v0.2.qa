@@ -16,6 +16,8 @@ Dispatch initCmd : initCmd
 Dispatch stopCmd : stopCmd
 
 Context ctxRobotCleaner ip [ host="localhost"   port=8032 ] -g white
+Context ctxMbotExecutor ip [host="localhost" port=8029]
+
 EventHandler evh for tempSensor -print {	//event-driven ; no Mqtt support yet
  	forwardEvent mbotcleanercontroller -m tempSensorMsg  	//from event to message
 }; 
@@ -27,11 +29,7 @@ QActor mbotcleanercontroller context ctxRobotCleaner {
 	
 	Plan init normal [
 		demo consult("./src/model/robotCleaner.pl");
-		println("Robot Ready");
-		[!? eval(ge,20,20)]	
-			println("Entrato")
-		else
-			println("Non entrato")
+		println("Robot Ready")
 	]
 	switchTo waitStart
 	
@@ -59,7 +57,7 @@ QActor mbotcleanercontroller context ctxRobotCleaner {
 		onMsg usercmdMsg : usercmd(start, TEMP) -> {
 			[!? evalCondition(start)]{
 				//forward mbotagent -m initCmd : initCmd;	    //dico alla mbotangent (mind) di fermarsi
-				forward ledonmbot -m cmdToLed : cmdToLed(on)
+				sendto ledonmbot in ctxMbotExecutor -m cmdToLed : cmdToLed(on)
 			}
 			else
 				println("CONDITION OF TIME OR TEMP NOT SATISFIED")
@@ -67,7 +65,7 @@ QActor mbotcleanercontroller context ctxRobotCleaner {
 		
 		onMsg usercmdMsg : usercmd(halt, TEMP) -> {
 			println("STOP");
-			forward ledonmbot -m cmdToLed : cmdToLed(off)
+			sendto ledonmbot in ctxMbotExecutor -m cmdToLed : cmdToLed(on)
 		}
 		
 	]
@@ -81,7 +79,7 @@ QActor mbotcleanercontroller context ctxRobotCleaner {
 		*/
 		[!? evalCondition(halt)] {
 			println("STOP");
-			forward ledonmbot -m cmdToLed : cmdToLed(off)
+			sendto ledonmbot in ctxMbotExecutor -m cmdToLed : cmdToLed(off)
 		}
 			
 	]
@@ -100,28 +98,6 @@ QActor mbotcleanercontroller context ctxRobotCleaner {
 	
 }
 
-//Implementazione del led
-QActor ledonmbot context ctxRobotCleaner {
-	
-	Plan init normal[
-		println("Inizializza oggetto led")
-		
-	]
-	switchTo waitCommand
-	
-	Plan waitCommand[]
-	transition stopAfter 3600000
-		whenMsg cmdToLed -> doWork
-	finally repeatPlan
-	
-	Plan doWork resumeLastPlan[
-		
-		onMsg cmdToLed : cmdToLed( on ) -> println("LED ON");
-		onMsg cmdToLed : cmdToLed( off ) -> println("LED OFF")
-	]
-		
-		
-}
 
 
 

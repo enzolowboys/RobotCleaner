@@ -39,7 +39,7 @@ QActor mbotagent context ctxRobotCleaner -pubsub{
 		println("mbotagent doWork")
 	]   
 	transition   stopAfter 6000000        
- 		whenEvent  sonarSensor  -> handleSonarEvents 	 
+ 		whenEvent  sonarSensor  -> handleSonarEvents 	  
  	finally repeatPlan
  	
  	Plan handleSonarEvents resumeLastPlan [ 

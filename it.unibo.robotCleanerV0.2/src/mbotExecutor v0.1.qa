@@ -10,11 +10,11 @@ Event realSonar   : sonar( DISTANCE )			//From real sonar on real robot
 Event sonarSensor : sonar( NAME, DISTANCE )
 Event mindcmd     : usercmd(CMD) 				//from the appl agent (the 'mind')
  
-Dispatch moveMbot : usercmd( CMD )   					
+Dispatch moveMbot : usercmd( CMD )   	
+Dispatch cmdToLed : cmdToLed(CMD)				
 
-pubSubServer  "tcp://192.168.43.229:1883"
 
-Context ctxMbotExecutor ip  [ host="192.168.43.68"  port=8029 ]  -httpserver    
+Context ctxMbotExecutor ip  [ host="localhost"  port=8029 ]      
 EventHandler evh for usercmd , mindcmd -print {	//event-driven
  	forwardEvent mbot -m moveMbot  	//from event to message     
 };
@@ -30,7 +30,7 @@ QActor mbot context ctxMbotExecutor {
   		foundObstacle :- retract( realDistance(D) ), eval( lt, D, 20 ).
 	}
 	Plan init normal [       
- 	    [ !? onRaspberry] javaRun it.unibo.mbot.mbotConnArduino.initRasp()	;
+ 	    [ !? onRaspberry] //javaRun it.unibo.mbot.mbotConnArduino.initRasp()	;
 	    println("mbot START")    
   	] 
     switchTo waitForCmd        
@@ -42,20 +42,20 @@ QActor mbot context ctxMbotExecutor {
 	   
   	Plan execMove resumeLastPlan[     
   		printCurrentMessage;
-     	onMsg moveMbot : usercmd( robotgui(h(X)) )  -> javaRun it.unibo.mbot.mbotConnArduino.mbotStop();  
-  		onMsg moveMbot : usercmd( robotgui(w(X)) )  -> javaRun it.unibo.mbot.mbotConnArduino.mbotForward();    
-    	onMsg moveMbot : usercmd( robotgui(s(X)) )  -> javaRun it.unibo.mbot.mbotConnArduino.mbotBackward(); 
+     	onMsg moveMbot : usercmd( robotgui(h(X)) )  -> println("stop");
+  		onMsg moveMbot : usercmd( robotgui(w(X)) )  -> println("avanti");
+    	onMsg moveMbot : usercmd( robotgui(s(X)) )  -> println("indietro");
   		onMsg moveMbot : usercmd( robotgui(a(X)) )   -> {
-  			javaRun it.unibo.mbot.mbotConnArduino.mbotLeft();
+  			println("sinistra");
 			delay 680;	//TODO: use some configuration parameter
- 			javaRun it.unibo.mbot.mbotConnArduino.mbotStop()				
+ 			println("stop")			
   		};    
    		onMsg moveMbot : usercmd( robotgui(d(X)) )  -> {
-			javaRun it.unibo.mbot.mbotConnArduino.mbotRight();
+			println("destra");
 			delay 680;//TODO: use some configuration parameter
-	 		javaRun it.unibo.mbot.mbotConnArduino.mbotStop()   			
-   		}  ;   
-    	onMsg moveMbot : usercmd( robotgui(f(X)) )  -> javaRun it.unibo.mbot.mbotConnArduino.mbotLinefollow()     
+	 		println("stop")  			
+   		}  
+    	//onMsg moveMbot : usercmd( robotgui(f(X)) )  -> println("segui linea")
    	]           
 }  
  
@@ -64,7 +64,7 @@ QActor mbot context ctxMbotExecutor {
  * Convert sonar events into polar
  * -----------------------------------------------------
  */
-QActor realsonardetector context ctxMbotExecutor -pubsub{	
+QActor realsonardetector context ctxMbotExecutor {	
 	Plan init normal [
 		println("sonardetector STARTS ")
 	]
@@ -82,3 +82,28 @@ QActor realsonardetector context ctxMbotExecutor -pubsub{
  	]
  	switchTo waitForEvents
  }
+ 
+ 
+ //Implementazione del led
+QActor ledonmbot context ctxMbotExecutor {
+	
+	Plan init normal[
+		println("Inizializza oggetto led")
+		
+	]
+	switchTo waitCommand
+	
+	Plan waitCommand[]
+	transition stopAfter 3600000
+		whenMsg cmdToLed -> doWork
+	finally repeatPlan
+	
+	Plan doWork resumeLastPlan[
+		
+		onMsg cmdToLed : cmdToLed( on ) -> println("LED ON");
+		onMsg cmdToLed : cmdToLed( off ) -> println("LED OFF")
+	]
+		
+		
+}
+ 
