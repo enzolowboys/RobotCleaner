@@ -73,7 +73,6 @@ public abstract class AbstractRoverobstacleavoiadanceagent extends QActor {
 	    try{	
 	     PlanRepeat pr = PlanRepeat.setUp("init",-1);
 	    	String myselfName = "init";  
-	     connectToMqttServer("tcp://192.168.43.229:1883");
 	    	repeatPlanNoTransition(pr,myselfName,"roverobstacleavoiadanceagent_"+myselfName,false,false);
 	    }catch(Exception e_init){  
 	    	 println( getName() + " plan=init WARNING:" + e_init.getMessage() );

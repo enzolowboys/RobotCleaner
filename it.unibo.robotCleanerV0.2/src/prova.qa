@@ -1,0 +1,22 @@
+System consoleControlValue
+ 
+ Event usercmd: usercmd(CMD,TEMP) 
+ 
+ Dispatch tempSensor : tempSensor(TEMP)  
+ Dispatch usercmdMsg : usercmd(CMD, TEMP)
+ 
+Context ctxprova ip  [ host="localhost"  port=8029 ]  
+ 	
+EventHandler evh2 for usercmd -print {	//event-driven ; no Mqtt support yet
+ 	forwardEvent prova -m usercmdMsg  	//from event to message
+};
+ QActor  prova context ctxprova {
+ 
+ 	Plan init normal [
+ 		
+		println("ciao");
+		addRule sonarsense(24);
+		println("ciao2")
+	]
+
+	}

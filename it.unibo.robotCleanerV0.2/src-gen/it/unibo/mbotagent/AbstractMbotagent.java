@@ -83,7 +83,6 @@ public abstract class AbstractMbotagent extends QActor {
 	    try{	
 	     PlanRepeat pr = PlanRepeat.setUp("init",-1);
 	    	String myselfName = "init";  
-	     connectToMqttServer("tcp://192.168.43.229:1883");
 	    	//switchTo waitStartRobot
 	        switchToPlanAsNextState(pr, myselfName, "mbotagent_"+myselfName, 
 	              "waitStartRobot",false, false, null); 
